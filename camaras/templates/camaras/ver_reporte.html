@@ -1,0 +1,27 @@
+{% extends 'camaras/base.html' %}
+{% block title %}Reporte {{ nombre_archivo }}{% endblock %}
+
+{% block content %}
+<h2>Reporte: {{ nombre_archivo }}</h2>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            {% for col in datos.0.keys %}
+                <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for fila in datos %}
+        <tr>
+            {% for valor in fila.values %}
+                <td>{{ valor }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'lista_reportes' %}" class="btn btn-outline-primary mt-3">🔙 Volver a reportes</a>
+{% endblock %}
