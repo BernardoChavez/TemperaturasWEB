@@ -8,7 +8,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 🔑 Seguridad
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev_secret_key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+
+# 🔹 Dominio de Render
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'monitoreo-yyoy.onrender.com').split(',')
 
 # 🧩 Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -42,7 +44,8 @@ ROOT_URLCONF = 'monitoreo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # 🔹 Carpeta principal de templates
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -57,11 +60,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'monitoreo.wsgi.application'
 
-# 🗄️ Base de datos (Supabase Pooler)
-# Render va a usar DATABASE_URL como variable de entorno
+# 🗄️ Base de datos (Supabase)
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"postgres://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASSWORD')}@{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT','5432')}/{os.environ.get('DB_NAME')}",
+        default=f"postgres://{os.environ.get('DB_USER','user')}:{os.environ.get('DB_PASSWORD','pass')}@{os.environ.get('DB_HOST','host')}:{os.environ.get('DB_PORT','5432')}/{os.environ.get('DB_NAME','dbname')}",
         conn_max_age=600,
         ssl_require=True
     )
@@ -75,7 +77,7 @@ USE_TZ = True
 
 # 📦 Archivos estáticos
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # 🔢 Auto field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -84,7 +86,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True
 
 # 📂 Directorio de reportes
-REPORTES_DIR = os.path.join(BASE_DIR, 'reportes')
+REPORTES_DIR = BASE_DIR / 'reportes'
 os.makedirs(REPORTES_DIR, exist_ok=True)
 
 # ⏰ CRON jobs
