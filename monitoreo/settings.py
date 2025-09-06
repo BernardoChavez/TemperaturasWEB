@@ -1,19 +1,13 @@
 import os
 from pathlib import Path
 import dj_database_url
-from decouple import config
 
-# 📌 Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 🔑 Seguridad
-SECRET_KEY = config('SECRET_KEY', default='dev_secret_key')
-DEBUG = config('DEBUG', default=False, cast=bool)
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev_secret_key')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'monitoreo-yyoy.onrender.com').split(',')
 
-# 🔹 Dominio de Render
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='monitoreo-yyoy.onrender.com').split(',')
-
-# 🧩 Aplicaciones instaladas
 INSTALLED_APPS = [
     'django_crontab',
     'camaras',
@@ -27,7 +21,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-# 🧱 Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -39,13 +32,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# 🌐 URLs y templates
 ROOT_URLCONF = 'monitoreo.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],  # Carpeta principal de templates
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -60,36 +52,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'monitoreo.wsgi.application'
 
-# 🗄️ Base de datos (Supabase)
+# Conexión a Supabase
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"postgres://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT', default='5432')}/{config('DB_NAME')}",
+        default=f"postgres://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASSWORD')}@{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT','5432')}/{os.environ.get('DB_NAME')}",
         conn_max_age=600,
         ssl_require=True
     )
 }
 
-# 🌍 Internacionalización
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
 USE_TZ = True
 
-# 📦 Archivos estáticos
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# 🔢 Auto field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# 🌐 CORS
 CORS_ALLOW_ALL_ORIGINS = True
 
-# 📂 Directorio de reportes
 REPORTES_DIR = BASE_DIR / 'reportes'
 os.makedirs(REPORTES_DIR, exist_ok=True)
 
-# ⏰ CRON jobs
 CRONJOBS = [
     ('0 0 * * *', 'camaras.views.exportar_datos_diarios')
 ]
