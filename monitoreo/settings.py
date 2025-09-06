@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 🔑 Seguridad
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev_secret_key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 # 🧩 Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -58,9 +58,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'monitoreo.wsgi.application'
 
 # 🗄️ Base de datos (Supabase Pooler)
+# Render va a usar DATABASE_URL como variable de entorno
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
+        default=f"postgres://{os.environ.get('DB_USER')}:{os.environ.get('DB_PASSWORD')}@{os.environ.get('DB_HOST')}:{os.environ.get('DB_PORT','5432')}/{os.environ.get('DB_NAME')}",
         conn_max_age=600,
         ssl_require=True
     )
