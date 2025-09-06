@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: monitoreo
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn monitoreo.wsgi:application
+    envVars:
+      - key: SECRET_KEY
+        value: "django-insecure-d=93m4*_n34a_mzp6wo+f^kommbk22j5jh@a2b^6afmebqs0aq"
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DB_NAME
+        value: "postgres"
+      - key: DB_USER
+        value: "postgres"
+      - key: DB_PASSWORD
+        value: "ChaveZito234"
+      - key: DB_HOST
+        value: "db.jkpobkdndjfurdkdkduu.supabase.co"
