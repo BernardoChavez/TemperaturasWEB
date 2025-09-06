@@ -1,16 +1,17 @@
 import os
 from pathlib import Path
 import dj_database_url
+from decouple import config
 
 # 📌 Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 🔑 Seguridad
-SECRET_KEY = os.environ.get('SECRET_KEY', 'dev_secret_key')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+SECRET_KEY = config('SECRET_KEY', default='dev_secret_key')
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 # 🔹 Dominio de Render
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'monitoreo-yyoy.onrender.com').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='monitoreo-yyoy.onrender.com').split(',')
 
 # 🧩 Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -44,8 +45,7 @@ ROOT_URLCONF = 'monitoreo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # 🔹 Carpeta principal de templates
-        'DIRS': [BASE_DIR / "templates"],
+        'DIRS': [BASE_DIR / "templates"],  # Carpeta principal de templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -63,7 +63,7 @@ WSGI_APPLICATION = 'monitoreo.wsgi.application'
 # 🗄️ Base de datos (Supabase)
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"postgres://{os.environ.get('DB_USER','user')}:{os.environ.get('DB_PASSWORD','pass')}@{os.environ.get('DB_HOST','host')}:{os.environ.get('DB_PORT','5432')}/{os.environ.get('DB_NAME','dbname')}",
+        default=f"postgres://{config('DB_USER')}:{config('DB_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT', default='5432')}/{config('DB_NAME')}",
         conn_max_age=600,
         ssl_require=True
     )
