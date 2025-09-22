@@ -6,8 +6,10 @@ class CamarasConfig(AppConfig):
     name = 'camaras'
 
     def ready(self):
-        # Evitar doble ejecución en autoreload y comandos que no sean runserver
+        # Evitar doble ejecución en autoreload y en comandos de management
         if os.environ.get('RUN_MAIN') != 'true':
+            return
+        if os.environ.get('DISABLE_SCHEDULER') == '1':
             return
         try:
             from monitoreo.scheduler import start

@@ -3,14 +3,20 @@ services:
     name: monitoreo
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn monitoreo.wsgi:application
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate --noinput && gunicorn monitoreo.wsgi:application
     envVars:
       - key: SECRET_KEY
-        value: "django-insecure-d=93m4*_n34a_mzp6wo+f^kommbk22j5jh@a2b^6afmebqs0aq"
+        sync: false
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: "*"
+        value: "monitoreo-yyoy.onrender.com"
       - key: DATABASE_URL
-        value: "postgresql://postgres:ChaveZito234@aws-1-us-east-2.pooler.supabase.com:5432/postgres"
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: TZ
+        value: "America/La_Paz"

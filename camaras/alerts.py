@@ -1,10 +1,13 @@
+import os
 import requests
 
-# Token de tu bot y chat_id
-BOT_TOKEN = "8398893129:AAHQQFRVgv35OKGgiDIOhyAbEAjdxflQi_s"
-CHAT_ID = "716313145"
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 def enviar_alerta_telegram(mensaje):
+    if not BOT_TOKEN or not CHAT_ID:
+        print("[telegram] Variables de entorno faltantes: TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID")
+        return
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     data = {
         "chat_id": CHAT_ID,
