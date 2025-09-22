@@ -12,7 +12,7 @@ from .alerts import enviar_alerta_telegram
 import os
 import pandas as pd
 from datetime import datetime, timedelta
-from .storage import upload_file
+from .storage import upload_file, list_files, download_bytes
 
 # 📌 API que recibe datos del ESP32
 class TemperaturaCamaraAPIView(APIView):
@@ -95,13 +95,16 @@ def exportar_datos_diarios():
 
 # 📌 Vista: lista los reportes
 def lista_reportes(request):
-    reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
-    os.makedirs(reportes_dir, exist_ok=True)
+    bucket = os.environ.get("SUPABASE_BUCKET")
+    if bucket and os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY"):
+        archivos = list_files(bucket)
+    else:
+        reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
+        os.makedirs(reportes_dir, exist_ok=True)
+        archivos = sorted(os.listdir(reportes_dir), reverse=True)
 
-    archivos = sorted(os.listdir(reportes_dir), reverse=True)
     selected_date = request.GET.get('date')
     archivo_seleccionado = None
-
     if selected_date:
         nombre_archivo = f"reporte_{selected_date}.xlsx"
         if nombre_archivo in archivos:
@@ -115,23 +118,35 @@ def lista_reportes(request):
 
 # 📌 Vista: descargar reporte
 def descargar_reporte(request, nombre_archivo):
-    reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
-    archivo_path = os.path.join(reportes_dir, nombre_archivo)
-
-    if not os.path.exists(archivo_path):
-        raise Http404("Archivo no encontrado")
-
-    return FileResponse(open(archivo_path, "rb"), as_attachment=True, filename=nombre_archivo)
+    bucket = os.environ.get("SUPABASE_BUCKET")
+    if bucket and os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY"):
+        content = download_bytes(bucket, nombre_archivo)
+        if content is None:
+            raise Http404("Archivo no encontrado")
+        from io import BytesIO
+        return FileResponse(BytesIO(content), as_attachment=True, filename=nombre_archivo)
+    else:
+        reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
+        archivo_path = os.path.join(reportes_dir, nombre_archivo)
+        if not os.path.exists(archivo_path):
+            raise Http404("Archivo no encontrado")
+        return FileResponse(open(archivo_path, "rb"), as_attachment=True, filename=nombre_archivo)
 
 # 📌 Vista: ver reporte en la web
 def ver_reporte(request, nombre_archivo):
-    reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
-    archivo_path = os.path.join(reportes_dir, nombre_archivo)
-
-    if not os.path.exists(archivo_path):
-        raise Http404("Archivo no encontrado")
-
-    df = pd.read_excel(archivo_path)
+    bucket = os.environ.get("SUPABASE_BUCKET")
+    if bucket and os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY"):
+        content = download_bytes(bucket, nombre_archivo)
+        if content is None:
+            raise Http404("Archivo no encontrado")
+        from io import BytesIO
+        df = pd.read_excel(BytesIO(content))
+    else:
+        reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
+        archivo_path = os.path.join(reportes_dir, nombre_archivo)
+        if not os.path.exists(archivo_path):
+            raise Http404("Archivo no encontrado")
+        df = pd.read_excel(archivo_path)
     datos = df.to_dict(orient="records")
 
     return render(request, "camaras/ver_reporte.html", {
