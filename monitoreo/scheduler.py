@@ -6,6 +6,7 @@ from camaras.models import TemperaturaCamaras
 import pandas as pd
 import os
 from django.conf import settings
+from camaras.views import exportar_datos_diarios as exportar_datos_diarios_view
 
 _started = False  # evita múltiples hilos
 
@@ -15,33 +16,8 @@ def _reporte_path(fecha):
     return os.path.join(reportes_dir, f"reporte_{fecha}.xlsx")
 
 def exportar_datos_diarios():
-    ayer = timezone.localtime(timezone.now() - timedelta(days=1)).date()
-    
-    # Traer datos del día anterior
-    datos_del_ayer = [
-        t for t in TemperaturaCamaras.objects.all()
-        if timezone.localtime(t.fecha_hora).date() == ayer
-    ]
-
-    if not datos_del_ayer:
-        print(f"[scheduler] No hay datos para exportar del día {ayer}.")
-        return None
-
-    # Crear DataFrame
-    df = pd.DataFrame([{
-        "id_camara": t.id_camara,
-        "temperatura": float(t.temperatura),
-        "fecha_hora": timezone.localtime(t.fecha_hora).strftime("%Y-%m-%d %H:%M:%S"),
-    } for t in datos_del_ayer])
-
-    archivo = _reporte_path(ayer)
-    df.to_excel(archivo, index=False)
-
-    # --- BORRAR LOS DATOS DE LA BASE DE DATOS AQUÍ MISMO ---
-    TemperaturaCamaras.objects.filter(fecha_hora__date=ayer).delete()
-
-    print(f"[scheduler] ✅ Reporte diario creado: {archivo} y datos eliminados de la DB")
-    return archivo
+    # Reutiliza la función de vistas que ya sube a Supabase y borra datos
+    return exportar_datos_diarios_view()
 
 def start():
     global _started

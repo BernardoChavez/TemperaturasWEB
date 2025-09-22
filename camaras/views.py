@@ -12,6 +12,7 @@ from .alerts import enviar_alerta_telegram
 import os
 import pandas as pd
 from datetime import datetime, timedelta
+from .storage import upload_file
 
 # 📌 API que recibe datos del ESP32
 class TemperaturaCamaraAPIView(APIView):
@@ -61,6 +62,16 @@ def exportar_datos_diarios():
         return None
 
     df = pd.DataFrame(list(datos.values("id_camara", "temperatura", "fecha_hora")))
+    # Excel no soporta timezone-aware datetimes; convertir a naive (o string)
+    if not df.empty and "fecha_hora" in df.columns:
+        try:
+            df["fecha_hora"] = pd.to_datetime(df["fecha_hora"], utc=False, errors="coerce")
+            if hasattr(df["fecha_hora"], "dt"):
+                # Si viene con tz, quitarla
+                df["fecha_hora"] = df["fecha_hora"].dt.tz_localize(None)
+        except Exception:
+            # fallback a string legible
+            df["fecha_hora"] = df["fecha_hora"].astype(str)
 
     reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
     os.makedirs(reportes_dir, exist_ok=True)
@@ -68,8 +79,14 @@ def exportar_datos_diarios():
     archivo_excel = os.path.join(reportes_dir, f"reporte_{ayer}.xlsx")
     df.to_excel(archivo_excel, index=False)
 
-    archivo_txt = os.path.join(reportes_dir, f"reporte_{ayer}.txt")
-    df.to_csv(archivo_txt, index=False, sep='\t')
+    # Subir a Supabase Storage si está configurado
+    remote_path = f"reporte_{ayer}.xlsx"
+    upload_file(
+        bucket=os.environ.get("SUPABASE_BUCKET", "reportes"),
+        remote_path=remote_path,
+        local_path=archivo_excel,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
     datos.delete()
 
