@@ -81,14 +81,20 @@ def exportar_datos_diarios():
 
     # Subir a Supabase Storage si está configurado
     remote_path = f"reporte_{ayer}.xlsx"
-    upload_file(
-        bucket=os.environ.get("SUPABASE_BUCKET", "reportes"),
-        remote_path=remote_path,
-        local_path=archivo_excel,
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
+    subida_ok = True
+    if os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY"):
+        subida_ok = upload_file(
+            bucket=os.environ.get("SUPABASE_BUCKET", "reportes"),
+            remote_path=remote_path,
+            local_path=archivo_excel,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
-    datos.delete()
+    # Solo borrar si tenemos el archivo local y la subida (si aplica) fue OK
+    if os.path.exists(archivo_excel) and subida_ok:
+        datos.delete()
+    else:
+        print("[WARN] No se borraron datos: subida falló o archivo no existe.")
 
     print(f"[OK] Datos del {ayer} exportados y borrados.")
     return archivo_excel
@@ -96,12 +102,20 @@ def exportar_datos_diarios():
 # 📌 Vista: lista los reportes
 def lista_reportes(request):
     bucket = os.environ.get("SUPABASE_BUCKET")
-    if bucket and os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY"):
-        archivos = list_files(bucket)
-    else:
+    archivos = []
+    uso_supabase = bucket and os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY")
+    if uso_supabase:
+        try:
+            archivos = list_files(bucket)
+        except Exception:
+            archivos = []
+
+    # Fallback a carpeta local si no hay resultados de Supabase o no se usa Supabase
+    if not archivos:
         reportes_dir = getattr(settings, "REPORTES_DIR", os.path.join(settings.BASE_DIR, "reportes"))
         os.makedirs(reportes_dir, exist_ok=True)
-        archivos = sorted(os.listdir(reportes_dir), reverse=True)
+        if os.path.isdir(reportes_dir):
+            archivos = sorted(os.listdir(reportes_dir), reverse=True)
 
     selected_date = request.GET.get('date')
     archivo_seleccionado = None

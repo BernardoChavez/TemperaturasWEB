@@ -43,6 +43,37 @@ def upload_file(bucket: str, remote_path: str, local_path: str, content_type: st
         print("[storage] SUPABASE_URL o SUPABASE_SERVICE_KEY no configurados.")
         return False
 
+    # Asegurar bucket (idempotente)
+    ensure_bucket(bucket)
+
+    endpoint = f"{url}/storage/v1/object/{bucket}/{remote_path}"
+    try:
+        with open(local_path, "rb") as f:
+            r = requests.post(
+                endpoint,
+                headers={**_headers(key), "Content-Type": content_type},
+                data=f,
+                timeout=30,
+            )
+        # Si ya existe, hacer upsert con PUT
+        if r.status_code == 409:
+            with open(local_path, "rb") as f:
+                r = requests.put(
+                    endpoint,
+                    headers={**_headers(key), "Content-Type": content_type},
+                    data=f,
+                    timeout=30,
+                )
+        if 200 <= r.status_code < 300:
+            print(f"[storage] Subido: {remote_path}")
+            return True
+        else:
+            print("[storage] Error al subir:", r.status_code, r.text)
+            return False
+    except Exception as e:
+        print("[storage] Excepción al subir:", e)
+        return False
+
 
 def list_files(bucket: str, prefix: str = "") -> List[str]:
     url = os.environ.get("SUPABASE_URL")
@@ -103,35 +134,6 @@ def download_bytes(bucket: str, remote_path: str) -> Optional[bytes]:
         print("[storage] Excepción al descargar:", e)
         return None
 
-    # Asegurar bucket (idempotente)
-    ensure_bucket(bucket)
-
-    endpoint = f"{url}/storage/v1/object/{bucket}/{remote_path}"
-    try:
-        with open(local_path, "rb") as f:
-            r = requests.post(
-                endpoint,
-                headers={**_headers(key), "Content-Type": content_type},
-                data=f,
-                timeout=30,
-            )
-        # Si ya existe, hacer upsert con PUT
-        if r.status_code == 409:
-            with open(local_path, "rb") as f:
-                r = requests.put(
-                    endpoint,
-                    headers={**_headers(key), "Content-Type": content_type},
-                    data=f,
-                    timeout=30,
-                )
-        if 200 <= r.status_code < 300:
-            print(f"[storage] Subido: {remote_path}")
-            return True
-        else:
-            print("[storage] Error al subir:", r.status_code, r.text)
-            return False
-    except Exception as e:
-        print("[storage] Excepción al subir:", e)
-        return False
+    # (sin lógica extra aquí)
 
 
