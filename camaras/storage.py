@@ -28,10 +28,27 @@ def ensure_bucket(bucket: str) -> None:
         ],
     }
     try:
-        r = requests.post(endpoint, headers={**_headers(key), "Content-Type": "application/json"}, data=json.dumps(body), timeout=10)
-        # 409 = ya existe, se ignora
-        if r.status_code not in (200, 201, 409):
-            print("[storage] No se pudo asegurar bucket:", r.status_code, r.text)
+        r = requests.post(
+            endpoint,
+            headers={**_headers(key), "Content-Type": "application/json"},
+            data=json.dumps(body),
+            timeout=10,
+        )
+        # 200/201 = creado/ok; 409 = ya existe
+        if r.status_code in (200, 201, 409):
+            return
+        # Algunos despliegues retornan 400 con cuerpo que indica Duplicate/409
+        try:
+            payload = r.json()
+        except Exception:
+            payload = {}
+        mensaje = (payload or {}).get("message", "")
+        codigo_embebido = (payload or {}).get("statusCode")
+        if r.status_code == 400 and (
+            str(codigo_embebido) == "409" or "Duplicate" in mensaje or "already exists" in (mensaje or "").lower()
+        ):
+            return
+        print("[storage] No se pudo asegurar bucket:", r.status_code, r.text)
     except Exception as e:
         print("[storage] Excepción al asegurar bucket:", e)
 
@@ -51,7 +68,7 @@ def upload_file(bucket: str, remote_path: str, local_path: str, content_type: st
         with open(local_path, "rb") as f:
             r = requests.post(
                 endpoint,
-                headers={**_headers(key), "Content-Type": content_type},
+                headers={**_headers(key), "Content-Type": content_type, "x-upsert": "true"},
                 data=f,
                 timeout=30,
             )
