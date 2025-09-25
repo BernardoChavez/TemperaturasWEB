@@ -6,9 +6,7 @@ class CamarasConfig(AppConfig):
     name = 'camaras'
 
     def ready(self):
-        # Evitar doble ejecución en autoreload y en comandos de management
-        if os.environ.get('RUN_MAIN') != 'true':
-            return
+        # Permitir desactivar explícitamente el scheduler si se necesita
         if os.environ.get('DISABLE_SCHEDULER') == '1':
             return
         try:

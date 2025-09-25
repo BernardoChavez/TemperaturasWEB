@@ -81,7 +81,7 @@ def exportar_datos_diarios():
 
     # Subir a Supabase Storage si está configurado
     remote_path = f"reporte_{ayer}.xlsx"
-    subida_ok = True
+    subida_ok = False  # Solo borrar si la subida remota fue exitosa
     if os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY"):
         subida_ok = upload_file(
             bucket=os.environ.get("SUPABASE_BUCKET", "reportes"),
@@ -90,11 +90,14 @@ def exportar_datos_diarios():
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-    # Solo borrar si tenemos el archivo local y la subida (si aplica) fue OK
-    if os.path.exists(archivo_excel) and subida_ok:
-        datos.delete()
+    # Solo borrar si el archivo se subió a almacenamiento remoto exitosamente
+    if subida_ok:
+        try:
+            datos.delete()
+        except Exception:
+            print("[WARN] No se pudieron borrar los datos tras subir el archivo.")
     else:
-        print("[WARN] No se borraron datos: subida falló o archivo no existe.")
+        print("[WARN] No se borraron datos: la subida remota falló o no está configurada.")
 
     print(f"[OK] Datos del {ayer} exportados y borrados.")
     return archivo_excel
