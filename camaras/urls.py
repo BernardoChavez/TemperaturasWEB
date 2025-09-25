@@ -7,4 +7,5 @@ urlpatterns = [
     path('reportes/', views.lista_reportes, name='lista_reportes'),
     path('reportes/descargar/<str:nombre_archivo>/', views.descargar_reporte, name='descargar_reporte'),
     path('reportes/ver/<str:nombre_archivo>/', views.ver_reporte, name='ver_reporte'),
+    path('cron/trigger-export/', views.trigger_export, name='trigger_export'),
 ]

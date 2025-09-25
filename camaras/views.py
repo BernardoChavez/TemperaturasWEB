@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import render
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponseForbidden, JsonResponse
 from django.conf import settings
 from .serializers import TemperaturaCamaraSerializer
 from .models import TemperaturaCamaras
@@ -101,6 +101,19 @@ def exportar_datos_diarios():
 
     print(f"[OK] Datos del {ayer} exportados y borrados.")
     return archivo_excel
+
+
+# 📌 Endpoint seguro para disparar la exportación (para usar con cron externo)
+def trigger_export(request):
+    token = request.GET.get("token") or request.headers.get("X-EXPORT-TOKEN")
+    expected = os.environ.get("EXPORT_CRON_TOKEN")
+    if not expected or token != expected:
+        return HttpResponseForbidden("Token inválido")
+    archivo = exportar_datos_diarios()
+    return JsonResponse({
+        "ok": bool(archivo),
+        "archivo": os.path.basename(archivo) if archivo else None
+    })
 
 # 📌 Vista: lista los reportes
 def lista_reportes(request):
