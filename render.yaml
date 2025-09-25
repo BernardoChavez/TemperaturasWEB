@@ -20,3 +20,23 @@ services:
         sync: false
       - key: TZ
         value: "America/La_Paz"
+      - key: DISABLE_SCHEDULER
+        value: "1"
+
+  - type: worker
+    name: monitoreo-scheduler
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py migrate --noinput && python manage.py run_scheduler
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: TZ
+        value: "America/La_Paz"
