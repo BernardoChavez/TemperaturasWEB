@@ -29,14 +29,17 @@ def start():
     def run():
         print("[scheduler] Iniciado. Esperando medianoche…")
 
-        # Catch-up al arrancar: si ya pasaron las 00:00 y NO existe el archivo de ayer, créalo.
+        # Catch-up al arrancar: crea el reporte del día anterior si no existe
         ahora = timezone.localtime(timezone.now())
         ayer = (ahora - timedelta(days=1)).date()
-        if ahora.hour >= 0 and ahora.minute >= 1:  # arrancaste después de 00:01
-            archivo_ayer = _reporte_path(ayer)
-            if not os.path.exists(archivo_ayer):
-                print("[scheduler] Catch-up: creando reporte de ayer porque no existe.")
-                exportar_datos_diarios()
+        print(f"[DEBUG] Fecha actual local: {ahora}, Fecha de ayer calculada: {ayer}")
+        
+        archivo_ayer = _reporte_path(ayer)
+        if not os.path.exists(archivo_ayer):
+            print(f"[scheduler] Catch-up: creando reporte de ayer porque no existe el archivo: {archivo_ayer}")
+            exportar_datos_diarios()
+        else:
+            print(f"[scheduler] El archivo del día anterior ya existe: {archivo_ayer}")
 
         # Bucle principal: ejecutar exactamente a las 00:00
         while True:

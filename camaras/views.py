@@ -54,7 +54,8 @@ def lista_temperaturas(request):
 
 # 📌 Función: exporta los datos de ayer y los borra de la base de datos
 def exportar_datos_diarios():
-    ayer = datetime.now().date() - timedelta(days=1)
+    ayer = timezone.localtime(timezone.now()).date() - timedelta(days=1)
+    print(f"[DEBUG] Buscando datos para la fecha: {ayer}")
     datos = TemperaturaCamaras.objects.filter(fecha_hora__date=ayer)
 
     if not datos.exists():
