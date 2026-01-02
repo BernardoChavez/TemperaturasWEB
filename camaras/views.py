@@ -22,8 +22,8 @@ class TemperaturaCamaraAPIView(APIView):
             temp_obj = serializer.save()  # Guardamos el registro
 
             # Revisar y enviar alerta inmediatamente si está fuera de rango
-            temperatura_min = 5
-            temperatura_max = 30
+            temperatura_min = 0
+            temperatura_max = 5
 
             if (temp_obj.temperatura < temperatura_min or temp_obj.temperatura > temperatura_max) and not temp_obj.alerta_enviada:
                 enviar_alerta_telegram(
@@ -48,8 +48,8 @@ def lista_temperaturas(request):
 
     return render(request, 'camaras/lista_temperaturas.html', {
         'temperaturas': temperaturas,
-        'temp_min': 5,
-        'temp_max': 30
+        'temp_min': 0,
+        'temp_max': 5
     })
 
 # 📌 Función: exporta los datos de ayer y los borra de la base de datos
