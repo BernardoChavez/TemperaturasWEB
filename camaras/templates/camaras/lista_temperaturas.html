@@ -1,0 +1,29 @@
+{% extends 'camaras/base.html' %}
+{% block title %}Temperaturas Actuales{% endblock %}
+
+{% block content %}
+<h1 class="text-center">Temperaturas Actuales</h1>
+
+<a href="{% url 'lista_reportes' %}" class="boton-reportes">📂 Ver reportes históricos</a>
+
+<table class="table table-hover table-bordered text-center">
+    <thead class="table-dark">
+        <tr>
+            <th>Cámara</th>
+            <th>Temperatura (°C)</th>
+            <th>Fecha y hora</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in temperaturas %}
+        <tr>
+            <td>{{ t.id_camara }}</td>
+            <td class="{% if t.temperatura < temp_min or t.temperatura > temp_max %}text-danger{% else %}text-success{% endif %}">
+                {{ t.temperatura }}
+            </td>
+            <td>{{ t.fecha_hora|date:"d/m/Y H:i:s" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

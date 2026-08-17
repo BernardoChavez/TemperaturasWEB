@@ -1,0 +1,24 @@
+{% extends 'camaras/base.html' %}
+{% block title %}Reportes Históricos{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">📂 Reportes Históricos</h1>
+
+{% if archivos %}
+    <ul class="list-group shadow-sm">
+        {% for archivo in archivos %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ archivo }}
+                <div>
+                    <a href="{% url 'descargar_reporte' archivo %}" class="btn btn-primary btn-sm me-2">Descargar</a>
+                    <a href="{% url 'ver_reporte' archivo %}" class="btn btn-secondary btn-sm">Ver</a>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="alert alert-warning text-center">
+        No hay reportes disponibles.
+    </div>
+{% endif %}
+{% endblock %}

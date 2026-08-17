@@ -1,0 +1,11 @@
+Django>=4.2,<5.2
+djangorestframework
+django-cors-headers
+dj-database-url
+psycopg2-binary
+pandas
+openpyxl
+requests
+python-dotenv
+whitenoise
+django-crontab
